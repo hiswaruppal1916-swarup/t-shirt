@@ -22,7 +22,7 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = ({ currentView, onNav
         className={`nav-dock-item ${currentView === 'home' ? 'active' : ''}`}
         aria-label="Home"
       >
-        <Home size={20} />
+        <Home size={20} color={currentView === 'home' ? '#0B0C10' : '#9CA3AF'} />
         <span>Home</span>
       </button>
 
@@ -31,7 +31,7 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = ({ currentView, onNav
         className={`nav-dock-item ${currentView === 'shop' ? 'active' : ''}`}
         aria-label="Shop"
       >
-        <Compass size={20} />
+        <Compass size={20} color={currentView === 'shop' ? '#0B0C10' : '#9CA3AF'} />
         <span>Shop</span>
       </button>
 
@@ -41,8 +41,21 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = ({ currentView, onNav
         aria-label="Cart"
       >
         <div style={{ position: 'relative' }}>
-          <ShoppingBag size={20} />
-          {itemCount > 0 && <span className="badge-count" style={{ top: '-6px', right: '-10px' }}>{itemCount}</span>}
+          <ShoppingBag size={20} color={currentView === 'cart' ? '#0B0C10' : '#9CA3AF'} />
+          {itemCount > 0 && (
+            <span
+              className="badge-count"
+              style={{
+                top: '-6px',
+                right: '-10px',
+                backgroundColor: '#C5A059',
+                color: '#0B0C10',
+                fontWeight: 800
+              }}
+            >
+              {itemCount}
+            </span>
+          )}
         </div>
         <span>Cart</span>
       </button>
@@ -52,7 +65,7 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = ({ currentView, onNav
         className={`nav-dock-item ${currentView === 'account' ? 'active' : ''}`}
         aria-label="Account"
       >
-        <User size={20} />
+        <User size={20} color={currentView === 'account' ? '#0B0C10' : '#9CA3AF'} />
         <span>Account</span>
       </button>
     </nav>

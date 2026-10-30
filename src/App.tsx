@@ -79,52 +79,54 @@ export function AppContent() {
         }}
       />
 
-      {/* Main Viewport Routing */}
+      {/* Main Viewport Routing with Silk Smooth Transition */}
       <main className={currentView !== 'checkout' ? 'has-mobile-dock' : ''} style={{ flex: 1, minWidth: 0 }}>
-        {currentView === 'home' && (
-          <HomePage
-            products={products}
-            variants={variants}
-            onNavigate={handleNavigate}
-            onSelectProduct={handleSelectProduct}
-          />
-        )}
+        <div key={currentView} style={{ animation: 'fadeInSoft 0.35s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+          {currentView === 'home' && (
+            <HomePage
+              products={products}
+              variants={variants}
+              onNavigate={handleNavigate}
+              onSelectProduct={handleSelectProduct}
+            />
+          )}
 
-        {currentView === 'shop' && (
-          <ShopPage
-            products={products}
-            variants={variants}
-            initialCategory={categoryFilter}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            onSelectProduct={handleSelectProduct}
-          />
-        )}
+          {currentView === 'shop' && (
+            <ShopPage
+              products={products}
+              variants={variants}
+              initialCategory={categoryFilter}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              onSelectProduct={handleSelectProduct}
+            />
+          )}
 
-        {currentView === 'product-detail' && selectedProduct && (
-          <ProductDetailPage
-            product={selectedProduct}
-            variants={variants}
-            onNavigate={handleNavigate}
-          />
-        )}
+          {currentView === 'product-detail' && selectedProduct && (
+            <ProductDetailPage
+              product={selectedProduct}
+              variants={variants}
+              onNavigate={handleNavigate}
+            />
+          )}
 
-        {currentView === 'cart' && <CartPage onNavigate={handleNavigate} />}
+          {currentView === 'cart' && <CartPage onNavigate={handleNavigate} />}
 
-        {currentView === 'checkout' && (
-          <CheckoutPage
-            onNavigate={handleNavigate}
-            onOrderSuccess={(ord) => setConfirmedOrder(ord)}
-          />
-        )}
+          {currentView === 'checkout' && (
+            <CheckoutPage
+              onNavigate={handleNavigate}
+              onOrderSuccess={(ord) => setConfirmedOrder(ord)}
+            />
+          )}
 
-        {currentView === 'order-confirmation' && (
-          <OrderConfirmationPage order={confirmedOrder} onNavigate={handleNavigate} />
-        )}
+          {currentView === 'order-confirmation' && (
+            <OrderConfirmationPage order={confirmedOrder} onNavigate={handleNavigate} />
+          )}
 
-        {currentView === 'account' && <AccountPage onNavigate={handleNavigate} />}
+          {currentView === 'account' && <AccountPage onNavigate={handleNavigate} />}
 
-        {currentView === 'admin' && <AdminDashboard onNavigate={handleNavigate} />}
+          {currentView === 'admin' && <AdminDashboard onNavigate={handleNavigate} />}
+        </div>
       </main>
 
       {/* Global Footer */}

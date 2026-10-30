@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Phone, Check, AlertCircle } from 'lucide-react';
+import { Phone, Check, AlertCircle, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const PhoneOnboardingModal: React.FC = () => {
@@ -41,55 +41,62 @@ export const PhoneOnboardingModal: React.FC = () => {
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(17, 24, 39, 0.65)',
-        backdropFilter: 'blur(6px)',
+        backgroundColor: 'rgba(11, 12, 16, 0.75)',
+        backdropFilter: 'blur(8px)',
         zIndex: 9999,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '1rem'
+        padding: '1.25rem',
+        animation: 'fadeInSoft 0.25s ease'
       }}
     >
       <div
         style={{
           backgroundColor: '#FFFFFF',
-          borderRadius: '1.25rem',
-          maxWidth: '460px',
+          borderRadius: '1.5rem',
+          maxWidth: '480px',
           width: '100%',
-          padding: '2rem',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-          position: 'relative'
+          padding: '2.25rem',
+          boxShadow: '0 25px 60px -15px rgba(11, 12, 16, 0.4)',
+          position: 'relative',
+          border: '1px solid #E8E8E2'
         }}
       >
-        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
           <div
             style={{
-              width: '56px',
-              height: '56px',
+              width: '58px',
+              height: '58px',
               borderRadius: '9999px',
-              backgroundColor: '#F3F4F6',
-              border: '1px solid #E5E7EB',
+              backgroundColor: '#FBFBFA',
+              border: '1px solid rgba(197, 160, 89, 0.35)',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#111827',
-              marginBottom: '1rem'
+              color: '#C5A059',
+              marginBottom: '1rem',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.05)'
             }}
           >
             <Phone size={24} />
           </div>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111827', letterSpacing: '-0.02em' }}>
-            Complete Customer Profile
+          <span className="editorial-eyebrow" style={{ display: 'block', marginBottom: '0.375rem' }}>
+            <Sparkles size={13} />
+            Member Registration
+          </span>
+          <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0B0C10', letterSpacing: '-0.02em' }}>
+            Courier Contact Details
           </h3>
-          <p style={{ fontSize: '0.875rem', color: '#6B7280', marginTop: '0.375rem' }}>
-            Welcome, <strong>{customerProfile?.name || user?.email}</strong>. A valid phone number is required to receive real-time courier and print updates from Qikink.
+          <p style={{ fontSize: '0.875rem', color: '#6B7280', marginTop: '0.5rem', lineHeight: '1.55' }}>
+            Welcome, <strong>{customerProfile?.name || user?.email}</strong>. A valid phone number is required to receive automated courier airway bill tracking from Qikink.
           </p>
         </div>
 
         <form onSubmit={handlePhoneSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <div>
             <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#374151', marginBottom: '0.5rem' }}>
-              Mobile / WhatsApp Number <span style={{ color: '#EF4444' }}>*</span>
+              Mobile / WhatsApp Number <span style={{ color: '#E11D48' }}>*</span>
             </label>
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
               <span
@@ -97,7 +104,7 @@ export const PhoneOnboardingModal: React.FC = () => {
                   position: 'absolute',
                   left: '1rem',
                   fontSize: '0.9375rem',
-                  fontWeight: 600,
+                  fontWeight: 700,
                   color: '#6B7280',
                   pointerEvents: 'none'
                 }}
@@ -112,14 +119,14 @@ export const PhoneOnboardingModal: React.FC = () => {
                   if (validationError) setValidationError('');
                 }}
                 placeholder="98765 43210"
-                style={{ paddingLeft: '3.25rem' }}
+                style={{ paddingLeft: '3.5rem', backgroundColor: '#FBFBFA', borderColor: '#E8E8E2' }}
                 maxLength={14}
                 required
                 autoFocus
               />
             </div>
             <p style={{ fontSize: '0.75rem', color: '#9CA3AF', marginTop: '0.375rem' }}>
-              Note: Phone number is recorded for courier delivery notices (not OTP-verified).
+              Used exclusively for BlueDart / Delhivery courier delivery updates.
             </p>
           </div>
 
@@ -132,7 +139,7 @@ export const PhoneOnboardingModal: React.FC = () => {
               cursor: 'pointer',
               fontSize: '0.8125rem',
               color: '#4B5563',
-              lineHeight: '1.4'
+              lineHeight: '1.45'
             }}
           >
             <input
@@ -143,13 +150,13 @@ export const PhoneOnboardingModal: React.FC = () => {
                 width: '18px',
                 height: '18px',
                 minHeight: '18px',
-                accentColor: '#111827',
+                accentColor: '#0B0C10',
                 marginTop: '2px',
                 flexShrink: 0
               }}
             />
             <span>
-              I explicitly consent to receive occasional WhatsApp alerts regarding new garment drops, customizer designs, and special discounts.
+              I consent to receive occasional WhatsApp notifications regarding new limited drops, customizer designs, and atelier previews.
             </span>
           </label>
 
@@ -160,14 +167,14 @@ export const PhoneOnboardingModal: React.FC = () => {
                 alignItems: 'center',
                 gap: '0.5rem',
                 padding: '0.75rem 1rem',
-                backgroundColor: '#FEF2F2',
-                border: '1px solid #FCA5A5',
-                borderRadius: '0.5rem',
-                color: '#B91C1C',
+                backgroundColor: '#FFF1F2',
+                border: '1px solid #FECDD3',
+                borderRadius: '0.75rem',
+                color: '#BE123C',
                 fontSize: '0.8125rem'
               }}
             >
-              <AlertCircle size={16} flex-shrink="0" />
+              <AlertCircle size={16} style={{ flexShrink: 0 }} />
               <span>{validationError}</span>
             </div>
           )}
@@ -175,10 +182,10 @@ export const PhoneOnboardingModal: React.FC = () => {
           <button
             type="submit"
             disabled={isSubmitting || !phoneNumber}
-            className="btn-primary"
+            className="btn-luxury-primary"
             style={{ width: '100%', minHeight: '50px' }}
           >
-            {isSubmitting ? 'Saving Profile...' : 'Save & Continue Shopping'}
+            {isSubmitting ? 'Saving Coordinates...' : 'Save & Continue to Atelier'}
           </button>
         </form>
       </div>

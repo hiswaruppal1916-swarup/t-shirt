@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { Star, Plus, SlidersHorizontal, Search, RotateCcw } from 'lucide-react';
+import { Search, RotateCcw, Sparkles, ArrowUpDown } from 'lucide-react';
 import { Product, ProductVariant } from '../types';
-import { useCart } from '../context/CartContext';
+import { ProductCard } from '../components/ProductCard';
+import { ScrollReveal } from '../components/Motion/ScrollReveal';
 
 interface ShopPageProps {
   products: Product[];
@@ -24,7 +25,6 @@ export const ShopPage: React.FC<ShopPageProps> = ({
 }) => {
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [sortBy, setSortBy] = useState<'featured' | 'price-low' | 'price-high'>('featured');
-  const { addToCart } = useCart();
   const [addedNotice, setAddedNotice] = useState<string | null>(null);
 
   const filteredProducts = useMemo(() => {
@@ -46,235 +46,241 @@ export const ShopPage: React.FC<ShopPageProps> = ({
       });
   }, [products, selectedCategory, searchQuery, sortBy]);
 
-  const handleQuickAdd = (product: Product, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const matchedVariant = variants.find((v) => v.product_id === product.id && v.size === 'L') ||
-      variants.find((v) => v.product_id === product.id) || {
-        id: crypto.randomUUID(),
-        qikink_sku: 'QIK-TS-BLK-L',
-        variant_name: 'Phantom Black / L',
-        size: 'L',
-        color: 'Phantom Black'
-      };
-
-    addToCart({
-      productId: product.id,
-      productName: product.name,
-      productSlug: product.slug,
-      variantId: matchedVariant.id,
-      variantName: matchedVariant.variant_name || 'Phantom Black / L',
-      size: matchedVariant.size || 'L',
-      color: matchedVariant.color || 'Phantom Black',
-      qikinkSku: matchedVariant.qikink_sku,
-      unitPrice: product.selling_price,
-      quantity: 1,
-      imageUrl: product.main_image_url
-    });
-
-    setAddedNotice(`Added "${product.name}" (Size L) to cart!`);
-    setTimeout(() => setAddedNotice(null), 3000);
-  };
-
   return (
-    <div className="container" style={{ paddingTop: '2rem', paddingBottom: '4rem' }}>
+    <div style={{ backgroundColor: '#FFFFFF', minHeight: '100vh', paddingTop: '2.5rem', paddingBottom: '6rem' }}>
+      {/* Toast Notification */}
       {addedNotice && (
         <div
           style={{
             position: 'fixed',
-            top: '5rem',
+            top: '5.5rem',
             right: '1.5rem',
-            backgroundColor: '#111827',
+            backgroundColor: '#0B0C10',
             color: '#FFFFFF',
-            padding: '0.75rem 1.25rem',
+            padding: '0.875rem 1.5rem',
             borderRadius: '9999px',
             fontSize: '0.875rem',
             fontWeight: 600,
             zIndex: 100,
-            boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)'
+            boxShadow: '0 15px 35px -5px rgba(11,12,16,0.3)',
+            border: '1px solid rgba(197, 160, 89, 0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            animation: 'fadeInSoft 0.3s ease'
           }}
         >
-          {addedNotice}
+          <Sparkles size={16} color="#C5A059" />
+          <span>{addedNotice}</span>
         </div>
       )}
 
-      {/* Header & Controls */}
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: 800, color: '#111827', letterSpacing: '-0.02em' }}>
-          All Custom Tees & Drops
-        </h1>
-        <p style={{ fontSize: '0.875rem', color: '#6B7280', marginTop: '0.25rem' }}>
-          Showing {filteredProducts.length} verified print-on-demand designs
-        </p>
-
-        {/* Filter & Search Bar Controls */}
-        <div
-          style={{
-            marginTop: '1.5rem',
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '1rem'
-          }}
-        >
-          {/* Category Pills */}
-          <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', scrollbarWidth: 'none', maxWidth: '100%' }}>
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`filter-chip ${selectedCategory === cat ? 'active' : ''}`}
+      <div className="container">
+        {/* Editorial Catalog Header */}
+        <ScrollReveal>
+          <div style={{ marginBottom: '2.5rem' }}>
+            <span className="editorial-eyebrow">
+              <Sparkles size={14} />
+              The Complete Archive
+            </span>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', marginTop: '0.5rem' }}>
+              <h1
+                style={{
+                  fontSize: 'clamp(2rem, 4vw, 3rem)',
+                  fontWeight: 800,
+                  color: '#0B0C10',
+                  letterSpacing: '-0.03em',
+                  lineHeight: '1.1'
+                }}
               >
-                {cat}
-              </button>
-            ))}
-          </div>
+                All Atelier Drops
+              </h1>
+              <span
+                style={{
+                  fontSize: '0.8125rem',
+                  fontWeight: 600,
+                  color: '#6B7280',
+                  letterSpacing: '0.04em'
+                }}
+              >
+                {filteredProducts.length} {filteredProducts.length === 1 ? 'Design' : 'Designs'} Available
+              </span>
+            </div>
+            <p style={{ fontSize: '0.9375rem', color: '#4B5563', marginTop: '0.5rem', maxWidth: '580px' }}>
+              Heavyweight 240 GSM combed cotton blanks with organic pigment DTG printing. Zero minimums, printed on-demand and shipped via Qikink.
+            </p>
 
-          {/* Sort Dropdown */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#6B7280' }}>Sort:</span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
+            {/* Filter and Sort Toolbar */}
+            <div
               style={{
-                width: 'auto',
-                minHeight: '40px',
-                padding: '0.375rem 1rem',
-                fontSize: '0.8125rem',
-                fontWeight: 600
+                marginTop: '2rem',
+                display: 'flex',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '1rem',
+                padding: '1rem',
+                backgroundColor: '#FBFBFA',
+                borderRadius: '1.25rem',
+                border: '1px solid #E8E8E2'
               }}
             >
-              <option value="featured">Featured Drops</option>
-              <option value="price-low">Price: Low to High</option>
-              <option value="price-high">Price: High to Low</option>
-            </select>
-          </div>
-        </div>
+              {/* Category Filter Pills */}
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '0.5rem',
+                  overflowX: 'auto',
+                  scrollbarWidth: 'none',
+                  maxWidth: '100%'
+                }}
+              >
+                {CATEGORIES.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`filter-chip ${selectedCategory === cat ? 'active' : ''}`}
+                    style={{
+                      borderRadius: '9999px',
+                      padding: '0.5rem 1.125rem',
+                      fontSize: '0.8125rem',
+                      fontWeight: selectedCategory === cat ? 700 : 500
+                    }}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
 
-        {/* Search Active Indicator */}
-        {searchQuery && (
-          <div
-            style={{
-              marginTop: '1rem',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.375rem 0.875rem',
-              backgroundColor: '#F3F4F6',
-              borderRadius: '9999px',
-              fontSize: '0.8125rem',
-              color: '#374151'
-            }}
-          >
-            <span>Search: "{searchQuery}"</span>
-            <button onClick={() => onSearchChange('')} style={{ fontWeight: 700 }}>
-              ✕
-            </button>
+              {/* Sort Selector */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginLeft: 'auto' }}>
+                <ArrowUpDown size={15} color="#6B7280" />
+                <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#6B7280' }}>Sort:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  style={{
+                    width: 'auto',
+                    minHeight: '38px',
+                    padding: '0.375rem 1rem',
+                    fontSize: '0.8125rem',
+                    fontWeight: 600,
+                    backgroundColor: '#FFFFFF',
+                    borderColor: '#E8E8E2',
+                    borderRadius: '9999px',
+                    color: '#0B0C10'
+                  }}
+                >
+                  <option value="featured">Featured Drops</option>
+                  <option value="price-low">Price: Low to High</option>
+                  <option value="price-high">Price: High to Low</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Active Search Query Tag */}
+            {searchQuery && (
+              <div
+                style={{
+                  marginTop: '1rem',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.375rem 1rem',
+                  backgroundColor: '#F4F4F0',
+                  borderRadius: '9999px',
+                  fontSize: '0.8125rem',
+                  color: '#0B0C10',
+                  border: '1px solid #E8E8E2'
+                }}
+              >
+                <span>Searching: <strong>"{searchQuery}"</strong></span>
+                <button
+                  onClick={() => onSearchChange('')}
+                  style={{
+                    marginLeft: '0.25rem',
+                    fontWeight: 700,
+                    color: '#6B7280',
+                    cursor: 'pointer'
+                  }}
+                  aria-label="Clear search"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+          </div>
+        </ScrollReveal>
+
+        {/* Empty State vs Products Grid */}
+        {filteredProducts.length === 0 ? (
+          <ScrollReveal>
+            <div
+              style={{
+                textAlign: 'center',
+                padding: '5rem 1.5rem',
+                backgroundColor: '#FBFBFA',
+                borderRadius: '1.5rem',
+                border: '1px dashed #E8E8E2',
+                maxWidth: '600px',
+                margin: '2rem auto'
+              }}
+            >
+              <div
+                style={{
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '9999px',
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid #E8E8E2',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#9CA3AF',
+                  marginBottom: '1.25rem'
+                }}
+              >
+                <Search size={24} />
+              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0B0C10' }}>
+                No Matching Atelier Drops Found
+              </h3>
+              <p style={{ fontSize: '0.875rem', color: '#6B7280', marginTop: '0.5rem', lineHeight: 1.6 }}>
+                We couldn't find any garments matching your current filter criteria.
+                Try resetting your filters or exploring our curated graphic and oversized collections.
+              </p>
+              <button
+                onClick={() => {
+                  setSelectedCategory('All');
+                  onSearchChange('');
+                }}
+                className="btn-luxury-primary"
+                style={{ marginTop: '1.75rem' }}
+              >
+                <RotateCcw size={16} />
+                <span>Reset All Filters</span>
+              </button>
+            </div>
+          </ScrollReveal>
+        ) : (
+          <div className="product-grid">
+            {filteredProducts.map((product, idx) => (
+              <ScrollReveal key={product.id} delay={Math.min(idx * 50, 300)}>
+                <ProductCard
+                  product={product}
+                  variants={variants}
+                  onSelectProduct={onSelectProduct}
+                  index={idx}
+                  onAddedNotice={(msg) => {
+                    setAddedNotice(msg);
+                    setTimeout(() => setAddedNotice(null), 3000);
+                  }}
+                />
+              </ScrollReveal>
+            ))}
           </div>
         )}
       </div>
-
-      {/* Empty State */}
-      {filteredProducts.length === 0 ? (
-        <div
-          style={{
-            textAlign: 'center',
-            padding: '4rem 1rem',
-            backgroundColor: '#F9FAFB',
-            borderRadius: '1.25rem',
-            border: '1px dashed #E5E7EB'
-          }}
-        >
-          <Search size={36} style={{ color: '#9CA3AF', margin: '0 auto 1rem' }} />
-          <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#111827' }}>
-            No Matching T-Shirts Found
-          </h3>
-          <p style={{ fontSize: '0.875rem', color: '#6B7280', marginTop: '0.25rem' }}>
-            Try clearing filters or search for another keyword like "Oversized" or "Tokyo".
-          </p>
-          <button
-            onClick={() => {
-              setSelectedCategory('All');
-              onSearchChange('');
-            }}
-            className="btn-secondary"
-            style={{ marginTop: '1.25rem' }}
-          >
-            <RotateCcw size={16} />
-            <span>Reset All Filters</span>
-          </button>
-        </div>
-      ) : (
-        /* Product Cards Grid — Mobile-first 2 columns, tablet 3, desktop 4 */
-        <div className="product-grid">
-          {filteredProducts.map((product) => (
-            <div
-              key={product.id}
-              className="product-card"
-              onClick={() => onSelectProduct(product)}
-              style={{ cursor: 'pointer' }}
-            >
-              <div className="product-image-container">
-                <img src={product.main_image_url} alt={product.name} loading="lazy" />
-                <span className="product-badge">{product.fabric_gsm || '240 GSM'}</span>
-                <button
-                  onClick={(e) => handleQuickAdd(product, e)}
-                  title="Quick Add Size L"
-                  style={{
-                    position: 'absolute',
-                    bottom: '0.625rem',
-                    right: '0.625rem',
-                    width: '44px',
-                    height: '44px',
-                    borderRadius: '9999px',
-                    backgroundColor: '#111827',
-                    color: '#FFFFFF',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
-                    transition: 'transform 0.15s ease'
-                  }}
-                >
-                  <Plus size={20} />
-                </button>
-              </div>
-
-              <div style={{ padding: '0.875rem', display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'space-between' }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginBottom: '0.375rem' }}>
-                    <Star size={13} fill="#111827" color="#111827" />
-                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#111827' }}>4.9</span>
-                    <span style={{ fontSize: '0.75rem', color: '#9CA3AF' }}>(180+)</span>
-                  </div>
-                  <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#111827', lineHeight: '1.3' }}>
-                    {product.name}
-                  </h3>
-                  <p style={{ fontSize: '0.75rem', color: '#6B7280', marginTop: '0.25rem' }}>
-                    {product.category}
-                  </p>
-                </div>
-
-                <div style={{ marginTop: '0.875rem', display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '1.125rem', fontWeight: 800, color: '#111827' }}>
-                    ₹{product.selling_price}
-                  </span>
-                  {product.compare_price && (
-                    <span style={{ fontSize: '0.8125rem', color: '#9CA3AF', textDecoration: 'line-through' }}>
-                      ₹{product.compare_price}
-                    </span>
-                  )}
-                  {product.compare_price && (
-                    <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#10B981', marginLeft: 'auto' }}>
-                      {Math.round(((product.compare_price - product.selling_price) / product.compare_price) * 100)}% OFF
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 };
