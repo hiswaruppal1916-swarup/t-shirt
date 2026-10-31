@@ -10,6 +10,7 @@ interface AuthContextType {
   loginWithGoogle: () => Promise<void>;
   simulateCustomerLogin: (email: string, name: string) => Promise<void>;
   savePhoneNumber: (phone: string, marketingConsent: boolean) => Promise<void>;
+  dismissPhoneOnboarding: () => void;
   logout: () => Promise<void>;
 }
 
@@ -27,8 +28,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user) {
         handleUserAuthenticated(session.user);
       } else {
-        // Check for local development session
+        // Check for cached profile / dev session
+        const cachedProfile = localStorage.getItem('atelier_customer_profile');
         const devUser = localStorage.getItem('atelier_dev_user');
+        if (cachedProfile) {
+          try {
+            const parsed = JSON.parse(cachedProfile);
+            setCustomerProfile(parsed);
+          } catch {
+            // Ignore parse error
+          }
+        }
         if (devUser) {
           try {
             const parsed = JSON.parse(devUser);
@@ -71,43 +81,80 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loadCustomerProfile = async (authUserId: string, email: string, name: string) => {
     setIsLoading(true);
     try {
-      // Find existing customer record
+      const cachedPhone = localStorage.getItem('atelier_customer_phone_' + email);
+
+      // Query existing customer records for this email without using maybeSingle() which throws on duplicates
       const { data, error } = await supabase
         .from('customers')
         .select('*')
         .eq('email', email)
-        .maybeSingle();
+        .order('created_at', { ascending: false });
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error loading customer profile:', error);
+      if (error) {
+        console.warn('Customer profile DB query note:', error.message);
       }
 
-      if (data) {
-        setCustomerProfile(data);
-        // If phone is missing, prompt mandatory phone onboarding
-        if (!data.phone || data.phone.trim().length === 0) {
-          setNeedsPhoneOnboarding(true);
-        } else {
+      if (data && data.length > 0) {
+        const primaryCustomer = data[0];
+        const effectivePhone = primaryCustomer.phone || cachedPhone || '';
+
+        const profile: Customer = {
+          ...primaryCustomer,
+          phone: effectivePhone
+        };
+
+        setCustomerProfile(profile);
+        localStorage.setItem('atelier_customer_profile', JSON.stringify(profile));
+        if (effectivePhone) {
+          localStorage.setItem('atelier_customer_phone_' + email, effectivePhone);
+        }
+
+        // If phone has at least 10 digits, onboarding is completed
+        const cleanDigits = effectivePhone.replace(/\D/g, '');
+        if (cleanDigits.length >= 10) {
           setNeedsPhoneOnboarding(false);
+        } else {
+          setNeedsPhoneOnboarding(true);
         }
       } else {
         // Create new customer record
-        const { data: newCust, error: insertError } = await supabase
-          .from('customers')
-          .insert({
+        try {
+          const { data: inserted, error: insertError } = await supabase
+            .from('customers')
+            .insert({
+              auth_user_id: authUserId,
+              name: name,
+              email: email,
+              phone: cachedPhone || null,
+              marketing_consent: false
+            })
+            .select();
+
+          if (inserted && inserted.length > 0) {
+            const profile = inserted[0];
+            setCustomerProfile(profile);
+            localStorage.setItem('atelier_customer_profile', JSON.stringify(profile));
+            const cleanDigits = (profile.phone || '').replace(/\D/g, '');
+            setNeedsPhoneOnboarding(cleanDigits.length < 10);
+          } else {
+            throw insertError || new Error('Insert returned no rows');
+          }
+        } catch (insertErr) {
+          console.warn('Customer DB insert fallback:', insertErr);
+          // Resilient local profile fallback so user is never blocked
+          const fallbackProfile: Customer = {
+            id: crypto.randomUUID(),
             auth_user_id: authUserId,
             name: name,
             email: email,
-            marketing_consent: false
-          })
-          .select()
-          .single();
-
-        if (insertError) {
-          console.error('Error creating customer profile:', insertError);
-        } else if (newCust) {
-          setCustomerProfile(newCust);
-          setNeedsPhoneOnboarding(true);
+            phone: cachedPhone || undefined,
+            marketing_consent: false,
+            created_at: new Date().toISOString()
+          };
+          setCustomerProfile(fallbackProfile);
+          localStorage.setItem('atelier_customer_profile', JSON.stringify(fallbackProfile));
+          const cleanDigits = (cachedPhone || '').replace(/\D/g, '');
+          setNeedsPhoneOnboarding(cleanDigits.length < 10);
         }
       }
     } finally {
@@ -150,36 +197,64 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const savePhoneNumber = async (phone: string, marketingConsent: boolean) => {
-    if (!customerProfile && !user) return;
+    const cleaned = phone.trim().replace(/\D/g, '');
+    if (cleaned.length < 10) {
+      throw new Error('Please enter a valid 10-digit mobile phone number.');
+    }
+
+    const email = customerProfile?.email || user?.email;
+    if (!email) {
+      throw new Error('No active user email session found.');
+    }
+
     setIsLoading(true);
 
     try {
-      const email = customerProfile?.email || user?.email;
-      const { data, error } = await supabase
-        .from('customers')
-        .update({
-          phone: phone.trim(),
-          marketing_consent: marketingConsent,
-          updated_at: new Date().toISOString()
-        })
-        .eq('email', email)
-        .select()
-        .single();
+      // 1. Immediately update local state & localStorage so the UI is responsive & never blocked
+      const updatedProfile: Customer = {
+        id: customerProfile?.id || crypto.randomUUID(),
+        auth_user_id: user?.id,
+        name: customerProfile?.name || user?.user_metadata?.full_name || email.split('@')[0],
+        email: email,
+        phone: cleaned,
+        marketing_consent: marketingConsent,
+        created_at: customerProfile?.created_at || new Date().toISOString()
+      };
 
-      if (error) {
-        console.error('Error saving phone number:', error);
-      } else if (data) {
-        setCustomerProfile(data);
-        setNeedsPhoneOnboarding(false);
+      setCustomerProfile(updatedProfile);
+      setNeedsPhoneOnboarding(false);
+      localStorage.setItem('atelier_customer_phone_' + email, cleaned);
+      localStorage.setItem('atelier_customer_profile', JSON.stringify(updatedProfile));
+
+      // 2. Persist to Supabase Database (updates by email across matching customer records)
+      try {
+        await supabase
+          .from('customers')
+          .update({
+            phone: cleaned,
+            marketing_consent: marketingConsent,
+            updated_at: new Date().toISOString()
+          })
+          .eq('email', email);
+      } catch (dbErr) {
+        console.warn('Supabase DB phone update note (local state preserved):', dbErr);
       }
+    } catch (err: any) {
+      console.error('Error saving phone number:', err);
+      throw err;
     } finally {
       setIsLoading(false);
     }
   };
 
+  const dismissPhoneOnboarding = () => {
+    setNeedsPhoneOnboarding(false);
+  };
+
   const logout = async () => {
     setIsLoading(true);
     localStorage.removeItem('atelier_dev_user');
+    localStorage.removeItem('atelier_customer_profile');
     await supabase.auth.signOut();
     setUser(null);
     setCustomerProfile(null);
@@ -197,6 +272,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loginWithGoogle,
         simulateCustomerLogin,
         savePhoneNumber,
+        dismissPhoneOnboarding,
         logout
       }}
     >

@@ -42,6 +42,21 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate, onOrderS
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
+  // Auto-sync customer profile & cached phone coordinates
+  React.useEffect(() => {
+    const userEmail = customerProfile?.email || user?.email || '';
+    const cachedPhone = userEmail ? localStorage.getItem('atelier_customer_phone_' + userEmail) : '';
+    const activePhone = customerProfile?.phone || cachedPhone || '';
+
+    setFormData((prev) => ({
+      ...prev,
+      firstName: prev.firstName || customerProfile?.name?.split(' ')[0] || user?.user_metadata?.full_name?.split(' ')[0] || '',
+      lastName: prev.lastName || customerProfile?.name?.split(' ').slice(1).join(' ') || user?.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+      email: prev.email || userEmail,
+      phone: prev.phone || activePhone
+    }));
+  }, [customerProfile, user]);
+
   if (items.length === 0) {
     return (
       <div style={{ backgroundColor: '#FFFFFF', minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

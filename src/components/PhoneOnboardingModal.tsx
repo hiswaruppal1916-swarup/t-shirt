@@ -1,13 +1,37 @@
-import React, { useState } from 'react';
-import { Phone, Check, AlertCircle, Sparkles } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Phone, Check, AlertCircle, Sparkles, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const PhoneOnboardingModal: React.FC = () => {
-  const { needsPhoneOnboarding, savePhoneNumber, user, customerProfile } = useAuth();
+  const { needsPhoneOnboarding, savePhoneNumber, dismissPhoneOnboarding, user, customerProfile } = useAuth();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [marketingConsent, setMarketingConsent] = useState(false);
   const [validationError, setValidationError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Pre-fill from customerProfile or localStorage if available
+  useEffect(() => {
+    if (customerProfile?.phone) {
+      setPhoneNumber(customerProfile.phone.replace(/\D/g, ''));
+    } else {
+      const email = customerProfile?.email || user?.email;
+      if (email) {
+        const cached = localStorage.getItem('atelier_customer_phone_' + email);
+        if (cached) setPhoneNumber(cached);
+      }
+    }
+  }, [customerProfile, user]);
+
+  // Handle escape key to dismiss
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && needsPhoneOnboarding) {
+        dismissPhoneOnboarding();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [needsPhoneOnboarding, dismissPhoneOnboarding]);
 
   if (!needsPhoneOnboarding) {
     return null;
@@ -17,7 +41,7 @@ export const PhoneOnboardingModal: React.FC = () => {
     e.preventDefault();
     setValidationError('');
 
-    // Remove any formatting spaces or dashes
+    // Remove any formatting spaces, dashes, or non-digits
     const cleaned = phoneNumber.replace(/\D/g, '');
 
     // Validate 10-digit mobile number format
@@ -50,6 +74,12 @@ export const PhoneOnboardingModal: React.FC = () => {
         padding: '1.25rem',
         animation: 'fadeInSoft 0.25s ease'
       }}
+      onClick={(e) => {
+        // Dismiss if clicking outer backdrop
+        if (e.target === e.currentTarget) {
+          dismissPhoneOnboarding();
+        }
+      }}
     >
       <div
         style={{
@@ -62,7 +92,32 @@ export const PhoneOnboardingModal: React.FC = () => {
           position: 'relative',
           border: '1px solid #E8E8E2'
         }}
+        onClick={(e) => e.stopPropagation()}
       >
+        {/* Top Right Dismiss Button */}
+        <button
+          type="button"
+          onClick={dismissPhoneOnboarding}
+          title="Dismiss"
+          aria-label="Close modal"
+          style={{
+            position: 'absolute',
+            top: '1.25rem',
+            right: '1.25rem',
+            width: '36px',
+            height: '36px',
+            borderRadius: '9999px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#F4F4F0',
+            color: '#6B7280',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <X size={18} />
+        </button>
+
         <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
           <div
             style={{
@@ -89,7 +144,7 @@ export const PhoneOnboardingModal: React.FC = () => {
             Courier Contact Details
           </h3>
           <p style={{ fontSize: '0.875rem', color: '#6B7280', marginTop: '0.5rem', lineHeight: '1.55' }}>
-            Welcome, <strong>{customerProfile?.name || user?.email}</strong>. A valid phone number is required to receive automated courier airway bill tracking from Qikink.
+            Welcome, <strong>{customerProfile?.name || user?.user_metadata?.full_name || user?.email}</strong>. A valid phone number is required to receive automated courier airway bill tracking from Qikink.
           </p>
         </div>
 
@@ -179,14 +234,33 @@ export const PhoneOnboardingModal: React.FC = () => {
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={isSubmitting || !phoneNumber}
-            className="btn-luxury-primary"
-            style={{ width: '100%', minHeight: '50px' }}
-          >
-            {isSubmitting ? 'Saving Coordinates...' : 'Save & Continue to Atelier'}
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.25rem' }}>
+            <button
+              type="submit"
+              disabled={isSubmitting || !phoneNumber}
+              className="btn-luxury-primary"
+              style={{ width: '100%', minHeight: '50px' }}
+            >
+              {isSubmitting ? 'Saving Coordinates...' : 'Save & Continue to Atelier'}
+            </button>
+
+            <button
+              type="button"
+              onClick={dismissPhoneOnboarding}
+              style={{
+                fontSize: '0.8125rem',
+                color: '#6B7280',
+                textDecoration: 'underline',
+                padding: '0.375rem 0',
+                textAlign: 'center',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              Skip for now (I'll enter during checkout)
+            </button>
+          </div>
         </form>
       </div>
     </div>
